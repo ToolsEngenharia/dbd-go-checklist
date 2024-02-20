@@ -9,7 +9,7 @@ from datetime import datetime
 
 # settings
 st.set_page_config(layout="wide")
-col1, col2, col3 = st.columns([1, 3, 1])
+col1, col2 = st.columns([2, 4])
 with col1:
 	st.image('./images/Logo Verde.png', width=200)
 with col2:
@@ -22,6 +22,7 @@ df['PREVISÃO DE CONCLUSÃO'] = df['PREVISÃO DE CONCLUSÃO'].apply(lambda x: st
 df['CRONOGRAMA BASELINE'] = df['CRONOGRAMA BASELINE'].apply(lambda x: str(x).split('T')[0])
 
 empresas = np.sort( df['EMPRESA'].unique())
+listStatus = np.sort( df['STATUS'].unique())
 
 def grafico_pizza(df, empresa):
 	fig = px.pie(df[df['EMPRESA'] == empresa], names='STATUS')
@@ -43,13 +44,11 @@ def grafico_barras(df, xis, yis, categoria='STATUS'):
 
 # st.write(f'Filtrando dados para o intervalo de datas: {stll}')
 
-with col3:
-	dataFilter = st.date_input('Selecione a data', datetime.now().date())
+dataFilter = st.sidebar.date_input('Selecione a data', datetime.now().date())
+filStatus = st.sidebar.multiselect('Selecione o Status', listStatus, default=listStatus)
+
 	# periodo = st.slider('Qual intervalo de datas deseja filtrar?',value=(datetime.now().date(), datetime(2025, 1, 1).date()), format="DD/MM/YYYY")
-df_proximas_tarefas = df[(df['PREVISÃO DE CONCLUSÃO'] >= str(dataFilter)) & (df['STATUS'] != 'Concluído')]
-
-
-col1, col2 = st.columns(2)
+df_proximas_tarefas = df[(df['PREVISÃO DE CONCLUSÃO'] >= str(dataFilter)) & (df['STATUS'].isin(filStatus))]
 with col1:
 	st.metric(f'TOTAL DE ATIVIDADES:  PERÍODO - {dataFilter}', df_proximas_tarefas.shape[0])
 
