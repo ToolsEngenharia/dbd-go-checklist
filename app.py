@@ -9,6 +9,7 @@ from datetime import datetime
 
 # settings
 st.set_page_config(layout="wide")
+
 col1, col2 = st.columns([2, 4])
 with col1:
 	st.image('./images/Logo Verde.png', width=200)
@@ -20,9 +21,14 @@ df['EMPRESA'] = df['EMPRESA'].str.upper()
 df['DATA'] = df['DATA'].apply(lambda x: str(x).split('T')[0])
 df['PREVISÃO DE CONCLUSÃO'] = df['PREVISÃO DE CONCLUSÃO'].apply(lambda x: str(x).split('T')[0])
 df['CRONOGRAMA BASELINE'] = df['CRONOGRAMA BASELINE'].apply(lambda x: str(x).split('T')[0])
+df['CRITICIDADE'] = np.where(df['CRITICIDADE'] == 0, '(0) Urgente e Critica',
+								np.where(df['CRITICIDADE'] == 1, '(1) Impede Inicio de Qualificação',
+									np.where(df['CRITICIDADE'] == 2, '(2) Impede Conclusão de Qualificação',
+										np.where(df['CRITICIDADE'] == 3, '(3) Acabamentos', 'N/A'))))
 
 empresas = np.sort( df['EMPRESA'].unique())
 listStatus = np.sort( df['STATUS'].unique())
+listCriticidade = np.sort( df['CRITICIDADE'].unique())
 
 def grafico_pizza(df, empresa):
 	fig = px.pie(df[df['EMPRESA'] == empresa], names='STATUS')
@@ -46,9 +52,10 @@ def grafico_barras(df, xis, yis, categoria='STATUS'):
 
 dataFilter = st.sidebar.date_input('Selecione a data', datetime.now().date())
 filStatus = st.sidebar.multiselect('Selecione o Status', listStatus, default=listStatus)
+filCriticidade = st.sidebar.multiselect('Selecione a Criticidade', listCriticidade, default=listCriticidade)
 
 	# periodo = st.slider('Qual intervalo de datas deseja filtrar?',value=(datetime.now().date(), datetime(2025, 1, 1).date()), format="DD/MM/YYYY")
-df_proximas_tarefas = df[(df['PREVISÃO DE CONCLUSÃO'] >= str(dataFilter)) & (df['STATUS'].isin(filStatus))]
+df_proximas_tarefas = df[(df['PREVISÃO DE CONCLUSÃO'] >= str(dataFilter)) & (df['STATUS'].isin(filStatus)) & (df['CRITICIDADE'].isin(filCriticidade))]
 with col1:
 	st.metric(f'TOTAL DE ATIVIDADES:  PERÍODO - {dataFilter}', df_proximas_tarefas.shape[0])
 
