@@ -27,8 +27,8 @@ def grafico_pizza(df, empresa):
 	fig = px.pie(df[df['EMPRESA'] == empresa], names='STATUS')
 	return fig
 
-def grafico_barras(df, xis, yis):
-	fig = px.bar(df, x=xis, y=yis, color='STATUS')
+def grafico_barras(df, xis, yis, categoria='STATUS'):
+	fig = px.bar(df, x=xis, y=yis, color=categoria)
 	return fig
 
 # verificar se a data é válida e encontrar a data mínima e máxima
@@ -45,6 +45,7 @@ def grafico_barras(df, xis, yis):
 
 with col3:
 	dataFilter = st.date_input('Selecione a data', datetime.now().date())
+	# periodo = st.slider('Qual intervalo de datas deseja filtrar?',value=(datetime.now().date(), datetime(2025, 1, 1).date()), format="DD/MM/YYYY")
 df_proximas_tarefas = df[(df['PREVISÃO DE CONCLUSÃO'] >= str(dataFilter)) & (df['STATUS'] != 'Concluído')]
 
 
@@ -54,8 +55,13 @@ with col1:
 
 
 df_Status = df_proximas_tarefas.groupby(['EMPRESA', 'STATUS']).size().reset_index(name='QUANTIDADE')
-st.plotly_chart(grafico_barras(df_Status, 'EMPRESA', 'QUANTIDADE'), use_container_width=True)
+df_Criticidade = df_proximas_tarefas.groupby(['EMPRESA', 'CRITICIDADE']).size().reset_index(name='QUANTIDADE')
 
+tab1, tab2 = st.tabs(['STATUS', 'CRITICIDADE'])
+with tab1:
+	st.plotly_chart(grafico_barras(df_Status, 'EMPRESA', 'QUANTIDADE'), use_container_width=True)
+with tab2:
+	st.plotly_chart(grafico_barras(df_Criticidade, xis='EMPRESA', yis='QUANTIDADE', categoria='CRITICIDADE'), use_container_width=True)
 
 # with st.expander('TAREFAS FUTURAS'):
 # 	for atividade in df_proximas_tarefas['PENDENCIA']:
