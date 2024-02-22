@@ -66,7 +66,7 @@ with st.expander('PROGRAMADAS X REALIZADAS', expanded=True):
 	with col1:
 		st.container(border=True).plotly_chart(px.bar(x=[programadas, previstas, realizadas], y=['PROGRAMADAS', 'PREVISTAS', 'REALIZADAS'], color=['PROGRAMADAS', 'PREVISTAS', 'REALIZADAS']), use_container_width=True)
 	with col2:
-		st.container(border=True).plotly_chart(px.pie(names=['PROGRAMADAS', 'REALIZADAS'], values=[programadas, realizadas]), use_container_width=True)
+		st.container(border=True).plotly_chart(px.pie(names=['PROGRAMADAS', 'REALIZADAS'], values=[(realizadas/programadas)*100, 100-(realizadas/programadas)*100]), use_container_width=True)
 
 	c = st.container(border=True)
 	c.caption('ACOMPANHAMENTO PRODUÇÃO')
