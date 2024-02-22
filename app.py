@@ -58,6 +58,29 @@ dataFilter = st.sidebar.date_input('Selecione a data', datetime.now().date())
 filStatus = st.sidebar.multiselect('Selecione o Status', listStatus, default=listStatus)
 filCriticidade = st.sidebar.multiselect('Selecione a Criticidade', listCriticidade, default=listCriticidade)
 
+with st.expander('PROGRAMADAS X REALIZADAS', expanded=True):
+	programadas = df.shape[0]
+	previstas = df[df['PREVISÃO DE CONCLUSÃO'] <= str(dataFilter)].shape[0]
+	realizadas = df[df['STATUS'] == 'Concluído'].shape[0]
+	col1, col2 = st.columns([3, 1.5])
+	with col1:
+		st.container(border=True).plotly_chart(px.bar(x=[programadas, previstas, realizadas], y=['PROGRAMADAS', 'PREVISTAS', 'REALIZADAS'], color=['PROGRAMADAS', 'PREVISTAS', 'REALIZADAS']), use_container_width=True)
+	with col2:
+		st.container(border=True).plotly_chart(px.pie(names=['PROGRAMADAS', 'REALIZADAS'], values=[programadas, realizadas]), use_container_width=True)
+
+	c = st.container(border=True)
+	c.caption('ACOMPANHAMENTO PRODUÇÃO')
+	col1, col2, col3 = c.columns(3)
+	with col1:
+		st.container(border=True).metric(f':blue[PROGRAMADO]', programadas)
+	with col2:
+		st.container(border=True).metric(f':red[PREVISTO]', previstas)
+	with col3:
+		st.container(border=True).metric(f':green[REALIZADO]', realizadas)
+
+st.divider()
+st.subheader('TAREFAS FUTURAS')
+
 	# periodo = st.slider('Qual intervalo de datas deseja filtrar?',value=(datetime.now().date(), datetime(2025, 1, 1).date()), format="DD/MM/YYYY")
 df_proximas_tarefas = df[(df['PREVISÃO DE CONCLUSÃO'] >= str(dataFilter)) & (df['STATUS'].isin(filStatus)) & (df['CRITICIDADE'].isin(filCriticidade))]
 with col1:
