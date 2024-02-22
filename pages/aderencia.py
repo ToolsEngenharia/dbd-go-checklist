@@ -4,12 +4,16 @@ import numpy as np
 from getDados import getDadosSheet
 
 
+inpData = pd.to_datetime('today').date()
 st.set_page_config(layout="wide", page_title="ADERÊNCIA EQUIPE")
 
-
-st.title('ACOMPANHAMENTO EQUIPE DE PRODUÇÃO')
-
-inpData = st.date_input('', value=pd.to_datetime('today').date())
+col1, col2, col3 = st.columns([2, 4, 1])
+with col1:
+	st.image('./images/Logo Verde.png', width=200)
+with col2:
+	st.header('ACOMPANHAMENTO EQUIPE DE PRODUÇÃO')
+with col3:
+	st.subheader('DATA: ' + str(inpData))
 
 df = pd.DataFrame(getDadosSheet())
 
