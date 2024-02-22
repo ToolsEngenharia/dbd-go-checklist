@@ -83,9 +83,9 @@ st.subheader('TAREFAS FUTURAS')
 
 	# periodo = st.slider('Qual intervalo de datas deseja filtrar?',value=(datetime.now().date(), datetime(2025, 1, 1).date()), format="DD/MM/YYYY")
 df_proximas_tarefas = df[(df['PREVISÃO DE CONCLUSÃO'] >= str(dataFilter)) & (df['STATUS'].isin(filStatus)) & (df['CRITICIDADE'].isin(filCriticidade))]
+col1, col2 = st.columns(2)
 with col1:
 	st.metric(f'TOTAL DE ATIVIDADES:  PERÍODO - {dataFilter}', df_proximas_tarefas.shape[0])
-
 
 df_Status = df_proximas_tarefas.groupby(['EMPRESA', 'STATUS']).size().reset_index(name='QUANTIDADE')
 df_Criticidade = df_proximas_tarefas.groupby(['EMPRESA', 'CRITICIDADE']).size().reset_index(name='QUANTIDADE')

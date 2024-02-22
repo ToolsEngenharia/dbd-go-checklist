@@ -4,7 +4,7 @@ import numpy as np
 from getDados import getDadosSheet
 
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", page_title="ADERÊNCIA EQUIPE")
 
 
 st.title('ACOMPANHAMENTO EQUIPE DE PRODUÇÃO')
