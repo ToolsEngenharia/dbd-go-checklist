@@ -34,6 +34,7 @@ empresas = np.sort( df['EMPRESA'].unique())
 listStatus = np.sort( df['STATUS'].unique())
 listCriticidade = np.sort( df['CRITICIDADE'].unique())
 
+colores = [ 'blue', 'green', 'orange', 'red', 'violet', 'rainbow']
 def grafico_pizza(df, empresa):
 	fig = px.pie(df[df['EMPRESA'] == empresa], names='STATUS')
 	return fig
@@ -42,34 +43,28 @@ def grafico_barras(df, xis, yis, categoria='STATUS'):
 	fig = px.bar(df, x=xis, y=yis, color=categoria)
 	return fig
 
-# verificar se a data é válida e encontrar a data mínima e máxima
-# dat_min = df['PREVISÃO DE CONCLUSÃO'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d").date()).min()
-# st.write(f'Data mínima: {dat_min}')
-# st.write(f'Data mínima: {datetime.strptime(dat_min, "%Y-%m-%d").date()}')
-
-
-# # filter input data slice
-# st.write(f'Filtrando dados para a data: {dataFilter}')
-# stll = st.slider('Qual intervalo de datas deseja filtrar?',value=(datetime.now().date(), datetime(2025, 1, 1).date()), format="DD/MM/YYYY")
-
-# st.write(f'Filtrando dados para o intervalo de datas: {stll}')
-
-dataFilter = st.sidebar.date_input('Selecione a data', datetime.now().date())
+filData = st.sidebar.date_input('Selecione a data', datetime.now().date())
+# filIntervalo = st.sidebar.date_input('Selecione o intervalo de datas', (datetime.now().date(), datetime(2025, 1, 1).date()))
+# filIntervalo = st.sidebar.slider('Selecione o intervalo de datas', min_value=datetime(2020, 1, 1).date(), max_value=datetime(2025, 1, 1).date(), value=(datetime.now().date(), datetime.now().date()), format="DD/MM/YYYY")
 filStatus = st.sidebar.multiselect('Selecione o Status', listStatus, default=listStatus)
 filCriticidade = st.sidebar.multiselect('Selecione a Criticidade', listCriticidade, default=listCriticidade)
 
 with st.expander('PROGRAMADAS X REALIZADAS', expanded=True):
 	programadas = df.shape[0]
-	previstas = df[df['PREVISÃO DE CONCLUSÃO'] <= str(dataFilter)].shape[0]
+	previstas = df[df['PREVISÃO DE CONCLUSÃO'] <= str(filData)].shape[0]
 	realizadas = df[df['STATUS'] == 'Concluído'].shape[0]
 	col1, col2 = st.columns([3, 1.5])
 	with col1:
-		st.container(border=True).plotly_chart(px.bar(x=[programadas, previstas, realizadas], y=['PROGRAMADAS', 'PREVISTAS', 'REALIZADAS'], color=['PROGRAMADAS', 'PREVISTAS', 'REALIZADAS']), use_container_width=True)
+		c = st.container(border=True)
+		c.subheader('TOTAL DE ATIVIDADES PROGRAMADAS PARA CONCLUSÃO')
+		c.plotly_chart(px.bar(x=[programadas, previstas, realizadas], y=['PROGRAMADAS', 'PREVISTAS', 'REALIZADAS'], color=['PROGRAMADAS', 'PREVISTAS', 'REALIZADAS']), use_container_width=True)
 	with col2:
-		st.container(border=True).plotly_chart(px.pie(names=['REALIZADAS', 'NÃO REALIZADAS'], values=[(realizadas/programadas)*100, 100-(realizadas/programadas)*100]), use_container_width=True)
+		c = st.container(border=True)
+		c.subheader('% ATIVIDADES REALIZADAS')
+		c.plotly_chart(px.pie(names=['REALIZADAS', 'NÃO REALIZADAS'], values=[(realizadas/programadas)*100, 100-(realizadas/programadas)*100]), use_container_width=True)
 
 	c = st.container(border=True)
-	c.caption('ACOMPANHAMENTO PRODUÇÃO')
+	c.subheader('ACOMPANHAMENTO PRODUÇÃO')
 	col1, col2, col3 = c.columns(3)
 	with col1:
 		st.container(border=True).metric(f':blue[PROGRAMADO]', programadas)
@@ -79,13 +74,13 @@ with st.expander('PROGRAMADAS X REALIZADAS', expanded=True):
 		st.container(border=True).metric(f':green[REALIZADO]', realizadas)
 
 st.divider()
-st.subheader('TAREFAS FUTURAS')
+st.subheader('PRÓXIMAS ATIVIDADES')
 
-	# periodo = st.slider('Qual intervalo de datas deseja filtrar?',value=(datetime.now().date(), datetime(2025, 1, 1).date()), format="DD/MM/YYYY")
-df_proximas_tarefas = df[(df['PREVISÃO DE CONCLUSÃO'] >= str(dataFilter)) & (df['STATUS'].isin(filStatus)) & (df['CRITICIDADE'].isin(filCriticidade))]
+# periodo = st.slider('Qual intervalo de datas deseja filtrar?',value=(datetime.now().date(), datetime(2025, 1, 1).date()), format="DD/MM/YYYY")
+df_proximas_tarefas = df[(df['PREVISÃO DE CONCLUSÃO'] >= str(filData)) & (df['STATUS'].isin(filStatus)) & (df['CRITICIDADE'].isin(filCriticidade))]
 col1, col2 = st.columns(2)
 with col1:
-	st.metric(f'TOTAL DE ATIVIDADES:  PERÍODO - {dataFilter}', df_proximas_tarefas.shape[0])
+	st.metric(f'TOTAL DE ATIVIDADES:  PERÍODO - {filData}', df_proximas_tarefas.shape[0])
 
 df_Status = df_proximas_tarefas.groupby(['EMPRESA', 'STATUS']).size().reset_index(name='QUANTIDADE')
 df_Criticidade = df_proximas_tarefas.groupby(['EMPRESA', 'CRITICIDADE']).size().reset_index(name='QUANTIDADE')
@@ -103,19 +98,38 @@ with tab2:
 
 empresasP = np.sort( df_proximas_tarefas['EMPRESA'].unique())
 for empresa in empresasP:
+	df_filtro = df_proximas_tarefas[df_proximas_tarefas['EMPRESA'] == empresa]
 	c = st.container(border=True)
-	c.subheader(f':blue[{empresa.strip()}]')
+	c.subheader(f':{colores[np.random.randint(0, 5)]}[{empresa}]')
 
 	metric1, metric2, metric3, metric4, metric5 = c.columns(5)
-	metric1.metric('Total de Tarefas', df_proximas_tarefas[df_proximas_tarefas['EMPRESA'] == empresa].shape[0])
-	metric2.metric('Em Andamento', df_proximas_tarefas[(df_proximas_tarefas['EMPRESA'] == empresa) & (df_proximas_tarefas['STATUS'] == 'Em andamento')].shape[0])
-	metric3.metric('Aguardando Data', df_proximas_tarefas[(df_proximas_tarefas['EMPRESA'] == empresa) & (df_proximas_tarefas['STATUS'] == 'Aguardando data')].shape[0])
-	metric4.metric('Aguardando Data/Atrasado', df_proximas_tarefas[(df_proximas_tarefas['EMPRESA'] == empresa) & (df_proximas_tarefas['STATUS'] == 'Aguardando data/Atrasado')].shape[0])
-	metric5.metric('Atrasado', df_proximas_tarefas[(df_proximas_tarefas['EMPRESA'] == empresa) & (df_proximas_tarefas['STATUS'] == 'Atrasado')].shape[0])
+	with metric1:
+		st.container(border=True).metric('Total de Tarefas', df_filtro.shape[0])
+	with metric2:
+		st.container(border=True).metric('Em Andamento', df_filtro[df_filtro['STATUS'] == 'Em andamento'].shape[0])
+	with metric3:
+		st.container(border=True).metric('Aguardando Data', df_filtro[df_filtro['STATUS'] == 'Aguardando data'].shape[0])
+	with metric4:
+		st.container(border=True).metric('Aguardando Data/Atrasado', df_filtro[df_filtro['STATUS'] == 'Aguardando data/Atrasado'].shape[0])
+	with metric5:
+		st.container(border=True).metric('Atrasado', df_filtro[df_filtro['STATUS'] == 'Atrasado'].shape[0])
 
-	c.expander('Gráfico').plotly_chart(grafico_pizza(df_proximas_tarefas, empresa), use_container_width=True)
+	with c.expander('GRÁFICO', expanded=True):
+		programadas = df.shape[0]
+		previstas = df[df['PREVISÃO DE CONCLUSÃO'] <= str(filData)].shape[0]
+		realizadas = df[df['STATUS'] == 'Concluído'].shape[0]
+		col1, col2 = st.columns([3, 1.5])
+		with col1:
+			c1 = st.container(border=True)
+			c1.subheader('TOTAL DE ATIVIDADES POR STATUS')
+			c1.plotly_chart(px.bar(df_filtro.groupby('STATUS').size().reset_index(name='QUANTIDADE'), x='QUANTIDADE', y='STATUS', color='STATUS'), use_container_width=True)
 
-	with c.expander('Atividades', expanded=True):
+		with col2:
+			c1 = st.container(border=True)
+			c1.subheader('% ATIVIDADES POR STATUS')
+			c1.plotly_chart(grafico_pizza(df_proximas_tarefas, empresa), use_container_width=True)
+
+	with c.expander('ATIVIDADES', expanded=True):
 		st.dataframe(df_proximas_tarefas[df_proximas_tarefas['EMPRESA'] == empresa])
 		# for atividade in df_proximas_tarefas[df_proximas_tarefas['EMPRESA'] == empresa]['PENDENCIA']:
 		# 	st.subheader(f'{atividade}')
