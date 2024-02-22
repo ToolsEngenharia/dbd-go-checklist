@@ -8,13 +8,17 @@ from  getDados import getDadosSheet
 from datetime import datetime
 
 # settings
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", page_title="CHECKLIST")
 
-col1, col2 = st.columns([2, 4])
+col1, col2, col3 = st.columns([2, 4, 1])
 with col1:
 	st.image('./images/Logo Verde.png', width=200)
 with col2:
 	st.header('RELATÓRIO DE ATIVIDADES - CHECKLIST')
+with col3:
+	if st.button('Atualizar Dados'):
+		st.cache_data.clear()
+		st.experimental_rerun()
 
 df = pd.DataFrame(getDadosSheet())
 df['EMPRESA'] = df['EMPRESA'].str.upper()
