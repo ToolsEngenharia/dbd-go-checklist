@@ -13,7 +13,9 @@ with col1:
 with col2:
 	st.header('ACOMPANHAMENTO EQUIPE DE PRODUÇÃO')
 with col3:
-	st.subheader('DATA: ' + str(inpData))
+	st.subheader(f'Data: :green[{inpData}]')
+
+st.header('')
 
 df = pd.DataFrame(getDadosSheet())
 

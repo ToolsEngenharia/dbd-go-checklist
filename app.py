@@ -1,14 +1,27 @@
-import streamlit as st
-import pandas as pd
+from datetime import datetime
+
 import numpy as np
+import pandas as pd
 # import matplotlib.pyplot as plt
 import plotly.express as px
+import streamlit as st
 
-from  getDados import getDadosSheet
-from datetime import datetime
+from getDados import getDadosSheet
 
 # settings
 st.set_page_config(layout="wide", page_title="CHECKLIST")
+
+colores_map = {
+	'Concluído': 'green',
+	'Cancelado': 'gray',
+	'Em andamento': 'yellow',
+	'Aguardando data': 'salmon',
+	'Aguardando data/Atrasado': 'purple',
+	'Atrasado (Em andamento)': 'brown',
+	'Em andamento (Reprogramado)': 'lightskyblue',
+	'Em andamento (Projeção de atraso)': 'orange',
+	'Atrasado': 'red'
+}
 
 col1, col2, col3 = st.columns([2, 4, 1])
 with col1:
@@ -19,6 +32,8 @@ with col3:
 	if st.button('Atualizar Dados'):
 		st.cache_data.clear()
 		st.experimental_rerun()
+
+st.header('')
 
 df = pd.DataFrame(getDadosSheet())
 df['EMPRESA'] = df['EMPRESA'].str.upper()
@@ -36,12 +51,17 @@ listCriticidade = np.sort( df['CRITICIDADE'].unique())
 
 colores = [ 'blue', 'green', 'orange', 'red', 'violet', 'rainbow']
 def grafico_pizza(df, empresa):
-	fig = px.pie(df[df['EMPRESA'] == empresa], names='STATUS')
+
+	fig = px.pie(df[df['EMPRESA'] == empresa], names='STATUS', color='STATUS', color_discrete_map=colores_map)
 	return fig
 
 def grafico_barras(df, xis, yis, categoria='STATUS'):
-	fig = px.bar(df, x=xis, y=yis, color=categoria)
+	fig = px.bar(df, x=xis, y=yis, color=categoria, color_discrete_map=colores_map)
 	return fig
+
+def card(atividade):
+	with st.container(border=True):
+		c = st.container(border=True)
 
 filData = st.sidebar.date_input('Selecione a data', datetime.now().date())
 # filIntervalo = st.sidebar.date_input('Selecione o intervalo de datas', (datetime.now().date(), datetime(2025, 1, 1).date()))
@@ -49,27 +69,27 @@ filData = st.sidebar.date_input('Selecione a data', datetime.now().date())
 filStatus = st.sidebar.multiselect('Selecione o Status', listStatus, default=listStatus)
 filCriticidade = st.sidebar.multiselect('Selecione a Criticidade', listCriticidade, default=listCriticidade)
 
-with st.expander('PROGRAMADAS X REALIZADAS', expanded=True):
-	programadas = df.shape[0]
-	previstas = df[df['PREVISÃO DE CONCLUSÃO'] <= str(filData)].shape[0]
-	realizadas = df[df['STATUS'] == 'Concluído'].shape[0]
+with st.expander('TOTAL X REALIZADAS', expanded=True):
+	total = df.shape[0]
+	emAberto = df[(df['STATUS'] != 'Concluído') & (df['STATUS'] != 'Cancelado')].shape[0]
+	realizadas = df[(df['STATUS'] == 'Concluído') | (df['STATUS'] == 'Cancelado')].shape[0]
 	col1, col2 = st.columns([3, 1.5])
 	with col1:
 		c = st.container(border=True)
 		c.subheader('TOTAL DE ATIVIDADES PROGRAMADAS PARA CONCLUSÃO')
-		c.plotly_chart(px.bar(x=[programadas, previstas, realizadas], y=['PROGRAMADAS', 'PREVISTAS', 'REALIZADAS'], color=['PROGRAMADAS', 'PREVISTAS', 'REALIZADAS']), use_container_width=True)
+		c.plotly_chart(px.bar(x=[total, realizadas, emAberto], y=['TOTAL', 'REALIZADAS', 'EM ABERTO'], color=['TOTAL', 'EM ABERTO', 'REALIZADAS']), use_container_width=True)
 	with col2:
 		c = st.container(border=True)
 		c.subheader('% ATIVIDADES REALIZADAS')
-		c.plotly_chart(px.pie(names=['REALIZADAS', 'NÃO REALIZADAS'], values=[(realizadas/programadas)*100, 100-(realizadas/programadas)*100]), use_container_width=True)
+		c.plotly_chart(px.pie(names=['REALIZADAS', 'NÃO REALIZADAS'], values=[(realizadas/total)*100, 100-(realizadas/total)*100]), use_container_width=True)
 
 	c = st.container(border=True)
 	c.subheader('ACOMPANHAMENTO PRODUÇÃO')
 	col1, col2, col3 = c.columns(3)
 	with col1:
-		st.container(border=True).metric(f':blue[PROGRAMADO]', programadas)
+		st.container(border=True).metric(f':blue[TOTAL]', total)
 	with col2:
-		st.container(border=True).metric(f':red[PREVISTO]', previstas)
+		st.container(border=True).metric(f':red[EM ABERTO]', emAberto)
 	with col3:
 		st.container(border=True).metric(f':green[REALIZADO]', realizadas)
 
@@ -94,7 +114,6 @@ with tab2:
 # with st.expander('TAREFAS FUTURAS'):
 # 	for atividade in df_proximas_tarefas['PENDENCIA']:
 # 		st.subheader(f'{atividade}')
-		
 
 empresasP = np.sort( df_proximas_tarefas['EMPRESA'].unique())
 for empresa in empresasP:
@@ -115,14 +134,14 @@ for empresa in empresasP:
 		st.container(border=True).metric('Atrasado', df_filtro[df_filtro['STATUS'] == 'Atrasado'].shape[0])
 
 	with c.expander('GRÁFICO', expanded=True):
-		programadas = df.shape[0]
-		previstas = df[df['PREVISÃO DE CONCLUSÃO'] <= str(filData)].shape[0]
+		total = df.shape[0]
+		emAberto = df[df['PREVISÃO DE CONCLUSÃO'] <= str(filData)].shape[0]
 		realizadas = df[df['STATUS'] == 'Concluído'].shape[0]
 		col1, col2 = st.columns([3, 1.5])
 		with col1:
 			c1 = st.container(border=True)
 			c1.subheader('TOTAL DE ATIVIDADES POR STATUS')
-			c1.plotly_chart(px.bar(df_filtro.groupby('STATUS').size().reset_index(name='QUANTIDADE'), x='QUANTIDADE', y='STATUS', color='STATUS'), use_container_width=True)
+			c1.plotly_chart(px.bar(df_filtro.groupby('STATUS').size().reset_index(name='QUANTIDADE'), x='QUANTIDADE', y='STATUS', color='STATUS', color_discrete_map=colores_map), use_container_width=True)
 
 		with col2:
 			c1 = st.container(border=True)
