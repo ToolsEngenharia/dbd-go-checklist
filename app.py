@@ -23,6 +23,14 @@ colores_map = {
 	'Atrasado': 'red'
 }
 
+colores_criticidade = {
+	'(0) Urgente e Critica': 'purple',
+	'(1) Impede Inicio de Qualificação': 'red',
+	'(2) Impede Conclusão de Qualificação': 'orange',
+	'(3) Acabamentos': 'yellow',
+	'N/A': 'gray'
+}
+
 col1, col2, col3 = st.columns([2, 4, 1])
 with col1:
 	st.image('./images/Logo Verde.png', width=200)
@@ -49,14 +57,17 @@ empresas = np.sort( df['EMPRESA'].unique())
 listStatus = np.sort( df['STATUS'].unique())
 listCriticidade = np.sort( df['CRITICIDADE'].unique())
 
+# Trim 
+df['CRITICIDADE'] = df['CRITICIDADE'].str.strip()
+
 colores = [ 'blue', 'green', 'orange', 'red', 'violet', 'rainbow']
 def grafico_pizza(df, empresa):
 
 	fig = px.pie(df[df['EMPRESA'] == empresa], names='STATUS', color='STATUS', color_discrete_map=colores_map)
 	return fig
 
-def grafico_barras(df, xis, yis, categoria='STATUS'):
-	fig = px.bar(df, x=xis, y=yis, color=categoria, color_discrete_map=colores_map)
+def grafico_barras(df, xis, yis, categoria='STATUS', cor=colores_map):
+	fig = px.bar(df, x=xis, y=yis, color=categoria, color_discrete_map=cor)
 	return fig
 
 def card(atividade):
@@ -66,8 +77,9 @@ def card(atividade):
 filData = st.sidebar.date_input('Selecione a data', datetime.now().date())
 # filIntervalo = st.sidebar.date_input('Selecione o intervalo de datas', (datetime.now().date(), datetime(2025, 1, 1).date()))
 # filIntervalo = st.sidebar.slider('Selecione o intervalo de datas', min_value=datetime(2020, 1, 1).date(), max_value=datetime(2025, 1, 1).date(), value=(datetime.now().date(), datetime.now().date()), format="DD/MM/YYYY")
-filStatus = st.sidebar.multiselect('Selecione o Status', listStatus, default=listStatus)
-filCriticidade = st.sidebar.multiselect('Selecione a Criticidade', listCriticidade, default=listCriticidade)
+filStatus = st.sidebar.multiselect('Selecione o Status', listStatus, default=listStatus, placeholder='TODOS OS STATUS')
+filCriticidade = st.sidebar.multiselect('Selecione a Criticidade', listCriticidade, default=listCriticidade, placeholder='TODAS AS CRITICIDADES')
+filFornecedor = st.sidebar.multiselect('Selecione o Fornecedor', empresas, default=empresas, placeholder='TODAS AS EMPRESAS')
 
 with st.expander('TOTAL X REALIZADAS', expanded=True):
 	total = df.shape[0]
@@ -97,7 +109,16 @@ st.divider()
 st.subheader('PRÓXIMAS ATIVIDADES')
 
 # periodo = st.slider('Qual intervalo de datas deseja filtrar?',value=(datetime.now().date(), datetime(2025, 1, 1).date()), format="DD/MM/YYYY")
-df_proximas_tarefas = df[(df['PREVISÃO DE CONCLUSÃO'] >= str(filData)) & (df['STATUS'].isin(filStatus)) & (df['CRITICIDADE'].isin(filCriticidade))]
+
+# caso campos de filtro estejam vazios, retorna todas as atividades
+if not filStatus:
+	filStatus = listStatus
+if not filCriticidade:
+	filCriticidade = listCriticidade
+if not filFornecedor:
+	filFornecedor = empresas
+
+df_proximas_tarefas = df[(df['PREVISÃO DE CONCLUSÃO'] >= str(filData)) & (df['STATUS'].isin(filStatus)) & (df['CRITICIDADE'].isin(filCriticidade)) & (df['EMPRESA'].isin(filFornecedor))]
 col1, col2 = st.columns(2)
 with col1:
 	st.metric(f'TOTAL DE ATIVIDADES:  PERÍODO - {filData}', df_proximas_tarefas.shape[0])
@@ -109,7 +130,7 @@ tab1, tab2 = st.tabs(['STATUS', 'CRITICIDADE'])
 with tab1:
 	st.plotly_chart(grafico_barras(df_Status, 'EMPRESA', 'QUANTIDADE'), use_container_width=True)
 with tab2:
-	st.plotly_chart(grafico_barras(df_Criticidade, xis='EMPRESA', yis='QUANTIDADE', categoria='CRITICIDADE'), use_container_width=True)
+	st.plotly_chart(grafico_barras(df_Criticidade, xis='EMPRESA', yis='QUANTIDADE', categoria='CRITICIDADE', cor=colores_criticidade), use_container_width=True)
 
 # with st.expander('TAREFAS FUTURAS'):
 # 	for atividade in df_proximas_tarefas['PENDENCIA']:
