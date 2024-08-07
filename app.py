@@ -118,7 +118,7 @@ if not filCriticidade:
 if not filFornecedor:
 	filFornecedor = empresas
 
-df_proximas_tarefas = df[((df['PREVISÃO DE CONCLUSÃO'] == str(filData)) | (df['PREVISÃO DE CONCLUSÃO'] == '')) & (df['STATUS'].isin(filStatus)) & (df['CRITICIDADE'].isin(filCriticidade)) & (df['EMPRESA'].isin(filFornecedor))]
+df_proximas_tarefas = df[((df['PREVISÃO DE CONCLUSÃO'] >= str(filData)) | (df['PREVISÃO DE CONCLUSÃO'] == '')) & (df['STATUS'].isin(filStatus)) & (df['CRITICIDADE'].isin(filCriticidade)) & (df['EMPRESA'].isin(filFornecedor))]
 col1, col2 = st.columns(2)
 with col1:
 	st.metric(f'TOTAL DE ATIVIDADES:  PERÍODO - {filData}', df_proximas_tarefas.shape[0])
