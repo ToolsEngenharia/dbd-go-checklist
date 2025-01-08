@@ -118,7 +118,7 @@ if not filCriticidade:
 if not filFornecedor:
 	filFornecedor = empresas
 
-df_proximas_tarefas = df[ (df['CRITICIDADE'].isin(filCriticidade)) & (df['EMPRESA'].isin(filFornecedor))]
+df_proximas_tarefas = df[ (df['STATUS'].isin(filStatus)) & (df['CRITICIDADE'].isin(filCriticidade)) & (df['EMPRESA'].isin(filFornecedor))]
 # df_proximas_tarefas = df[ (df['STATUS'].isin(filStatus)) & (df['CRITICIDADE'].isin(filCriticidade)) & (df['EMPRESA'].isin(filFornecedor))]
 col1, col2 = st.columns(2)
 with col1:
